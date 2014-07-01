@@ -32,6 +32,16 @@ describe 'ceilometer' do
     }
   end
 
+  let :log_params do
+    {
+      :logging_context_format_string => '%(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(request_id)s %(user_identity)s] %(instance)s%(message)s',
+      :logging_default_format_string => '%(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [-] %(instance)s%(message)s',
+      :logging_debug_format_suffix => '%(funcName)s %(pathname)s:%(lineno)d',
+      :logging_exception_prefix => '%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s',
+      :log_config_append => '/etc/ceilometer/logging.conf'
+    }
+  end
+
   shared_examples_for 'ceilometer' do
 
     context 'with rabbit_host parameter' do
@@ -62,8 +72,20 @@ describe 'ceilometer' do
       it_configures 'a ceilometer base installation'
       it_configures 'qpid support'
     end
+    
+    context 'with extra logging options' do
+      before {params.merge!( log_params ) }
+      it_configures 'a ceilometer base installation'
+      it_configures 'logging params set'
+    end
+
+    context 'without extra logging options' do
+      it_configures 'a ceilometer base installation'
+      it_configures 'logging params unset'
+    end
 
   end
+
 
   shared_examples_for 'a ceilometer base installation' do
 
@@ -280,6 +302,26 @@ describe 'ceilometer' do
     context("failing if the rpc_backend is not present") do
       before { params.delete( :rpc_backend) }
       it { expect { should raise_error(Puppet::Error) } }
+    end
+  end
+
+  shared_examples_for 'logging params set' do
+    it 'configures all extra logging options' do
+      should contain_ceilometer_config('DEFAULT/logging_context_format_string').with_value( params[:logging_context_format_string] )
+      should contain_ceilometer_config('DEFAULT/logging_default_format_string').with_value( params[:logging_default_format_string] )
+      should contain_ceilometer_config('DEFAULT/logging_debug_format_suffix').with_value( params[:logging_debug_format_suffix] )
+      should contain_ceilometer_config('DEFAULT/logging_exception_prefix').with_value( params[:logging_exception_prefix] )
+      should contain_ceilometer_config('DEFAULT/log_config_append').with_value( params[:log_config_append] )
+    end
+  end
+
+  shared_examples_for 'logging params unset' do
+    it 'configures no extra logging options' do
+      should contain_ceilometer_config('DEFAULT/logging_context_format_string').with_ensure('absent')
+      should contain_ceilometer_config('DEFAULT/logging_default_format_string').with_ensure('absent')
+      should contain_ceilometer_config('DEFAULT/logging_debug_format_suffix').with_ensure('absent')
+      should contain_ceilometer_config('DEFAULT/logging_exception_prefix').with_ensure('absent')
+      should contain_ceilometer_config('DEFAULT/log_config_append').with_ensure('absent')
     end
   end
 

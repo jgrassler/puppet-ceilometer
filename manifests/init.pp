@@ -21,6 +21,21 @@
 #  [*log_facility*]
 #    (optional) Syslog facility to receive log lines.
 #    Defaults to 'LOG_USER'
+#  [*logging_context_format_string*]
+#    (optional) Format string to use for log messages with context.
+#    Defaults to undef
+#  [*logging_default_format_string*]
+#    (optional) Format string to use for log messages without context.
+#    Defaults to undef
+#  [*logging_debug_format_suffix*]
+#    (optional) Data to append to log format when level is DEBUG.
+#    Defaults to undef
+#  [*logging_exception_prefix*]
+#    (optional) Prefix each line of exception output with this format.
+#    Defaults to undef
+#  [*log_config_append*]
+#    The name of an additional logging configuration file. Defaults to undef.
+#    See https://docs.python.org/2/howto/logging.html
 # [*rpc_backend*]
 #    (optional) what rpc/queuing service to use
 #    Defaults to impl_kombu (rabbitmq)
@@ -80,6 +95,11 @@ class ceilometer(
   $verbose             = false,
   $use_syslog          = false,
   $log_facility        = 'LOG_USER',
+  $logging_context_format_string = undef,
+  $logging_default_format_string = undef,
+  $logging_debug_format_suffix = undef,
+  $logging_exception_prefix = undef,
+  $log_config_append   = undef,
   $rpc_backend         = 'ceilometer.openstack.common.rpc.impl_kombu',
   $rabbit_host         = '127.0.0.1',
   $rabbit_port         = 5672,
@@ -245,6 +265,64 @@ class ceilometer(
       'DEFAULT/log_dir' : ensure => absent;
     }
   }
+
+  # Log format
+
+  if $logging_context_format_string {
+    ceilometer_config {
+      'DEFAULT/logging_context_format_string' : value => $logging_context_format_string;
+      }
+    }
+    else {
+    ceilometer_config {
+      'DEFAULT/logging_context_format_string' : ensure => absent;
+      }
+    }
+
+  if $logging_default_format_string {
+    ceilometer_config {
+      'DEFAULT/logging_default_format_string' : value => $logging_default_format_string;
+      }
+    }
+    else {
+    ceilometer_config {
+      'DEFAULT/logging_default_format_string' : ensure => absent;
+      }
+    }
+
+  if $logging_debug_format_suffix {
+    ceilometer_config {
+      'DEFAULT/logging_debug_format_suffix' : value => $logging_debug_format_suffix;
+      }
+    }
+    else {
+    ceilometer_config {
+      'DEFAULT/logging_debug_format_suffix' : ensure => absent;
+      }
+    }
+
+  if $logging_exception_prefix {
+    ceilometer_config {
+      'DEFAULT/logging_exception_prefix' : value => $logging_exception_prefix;
+      }
+    }
+    else {
+    ceilometer_config {
+      'DEFAULT/logging_exception_prefix' : ensure => absent;
+      }
+    }
+
+  if $log_config_append {
+    ceilometer_config {
+      'DEFAULT/log_config_append' : value => $log_config_append;
+      }
+    }
+    else {
+    ceilometer_config {
+      'DEFAULT/log_config_append' : ensure => absent;
+      }
+    }
+
 
   # Syslog configuration
   if $use_syslog {
